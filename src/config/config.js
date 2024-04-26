@@ -24,7 +24,7 @@ switch (mode) {
 dotenv.config({ path: envFilePath });
 
 export default {
-  port: process.env.PORT_CODE,
+  port: process.env.PORT,
   urlMongo: process.env.URL_MONGO,
   adminName: process.env.ADMIN_NAME,
   adminPassword: process.env.ADMIN_PASSWORD,

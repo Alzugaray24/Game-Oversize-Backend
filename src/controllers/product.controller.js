@@ -24,7 +24,10 @@ export const getProductController = async (req, res) => {
       products
     );
 
-    return products;
+    res.status(200).send({
+      msg: "Productos encontrados con exito",
+      productos: products,
+    });
   } catch (error) {
     req.logger.error(
       `[${new Date().toLocaleString()}] [GET] ${
@@ -117,6 +120,8 @@ export const putProductController = async (req, res) => {
 export const deleteProductController = async (req, res) => {
   try {
     const { id } = req.params;
+
+    console.log(id);
 
     const users = await userService.getAll();
 

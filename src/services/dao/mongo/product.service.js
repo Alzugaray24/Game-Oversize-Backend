@@ -77,6 +77,7 @@ export default class ProductServiceMongo {
   };
 
   delete = async (id) => {
+    console.log("dentro de delete", id);
     const result = await productModel.deleteOne({ _id: id });
     if (result.deletedCount === 1) {
       return id;

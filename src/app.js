@@ -9,6 +9,7 @@ import { addLogger } from "./config/logger_custom.js";
 import errorHandler from "./services/middlewares/errorHandler.js";
 import passport from "passport";
 import initializePassport from "./config/passport.config.js";
+import config from "./config/config.js";
 
 import UsersExtendRouter from "./routes/custom/users.extend.router.js";
 import ProductExtendRouter from "./routes/custom/product.extend.router.js";
@@ -51,7 +52,7 @@ app.use("/api/extend/cart", cartExtendRouter.getRouter());
 
 app.use(errorHandler);
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 app.listen(port, "0.0.0.0", console.log(`Server running on port ${port}`));
 

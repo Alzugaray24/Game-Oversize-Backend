@@ -43,7 +43,11 @@ export const getCartController = async (req, res) => {
         req.originalUrl
       } - Carrito obtenido exitosamente.`
     );
-    return cart;
+
+    res.status(200).send({
+      msg: "Carritos encontrados con exito",
+      carts: cart,
+    });
   } catch (error) {
     req.logger.error(
       `[${new Date().toLocaleString()}] [GET] ${
@@ -80,6 +84,9 @@ export const postCartController = async (req, res) => {
     if (!cart) {
       cart = await cartService.create({ _id: cartId, products: [] });
     }
+
+    console.log("Cart:", cart);
+    console.log("prod", cart.products);
     const existingProductIndex = cart.products.findIndex(
       (item) => item._id.toString() === productId.toString()
     );
@@ -287,7 +294,10 @@ export const finalizePurchase = async (req, res) => {
         } - Compra realizada con éxito.`
       );
 
-      return ticket;
+      res.status(200).send({
+        msg: "Compra realizada con exito",
+        ticket: ticket,
+      });
     } else {
       cart.products = cart.products.filter((item) =>
         productsFailed.includes(item.product)
