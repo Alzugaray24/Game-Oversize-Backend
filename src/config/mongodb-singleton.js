@@ -18,7 +18,7 @@ class MongoSingleton {
 
   #connectMongoDB = async () => {
     try {
-      await mongoose.connect(process.env.URL_MONGO || config.urlMongo);
+      await mongoose.connect(process.env.URL_MONGO_GAMEOVERSIZE);
     } catch (error) {
       console.error("No se pudo conectar a la BD usando Moongose: " + error);
       process.exit();
