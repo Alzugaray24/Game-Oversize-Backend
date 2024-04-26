@@ -52,7 +52,7 @@ app.use("/api/extend/cart", cartExtendRouter.getRouter());
 
 app.use(errorHandler);
 
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 9090;
 
 app.listen(port, "0.0.0.0", console.log(`Server running on port ${port}`));
 
