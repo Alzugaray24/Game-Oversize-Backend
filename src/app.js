@@ -9,7 +9,6 @@ import { addLogger } from "./config/logger_custom.js";
 import errorHandler from "./services/middlewares/errorHandler.js";
 import passport from "passport";
 import initializePassport from "./config/passport.config.js";
-import config from "./config/config.js";
 
 import UsersExtendRouter from "./routes/custom/users.extend.router.js";
 import ProductExtendRouter from "./routes/custom/product.extend.router.js";
