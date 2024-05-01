@@ -31,14 +31,14 @@ const specs = swaggerJSDoc(swaggerOptions);
 
 app.use("/apidocs", swaggerUIExpress.serve, swaggerUIExpress.setup(specs));
 
-app.use(cookieParser("CoderS3cr3tC0d3"));
+app.use(cookieParser());
 
 initializePassport();
 app.use(passport.initialize());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(addLogger);
 
 const usersExtendRouter = new UsersExtendRouter();

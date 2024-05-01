@@ -11,10 +11,12 @@ import {
   sendPurchaseSuccessEmail,
 } from "../dirname.js";
 import mongoose from "mongoose";
+import { getTokenFromCookie } from "../dirname.js";
 
 export const getCartController = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
     const userId = getUserIdFromToken(token);
     const user = await userService.findById(userId);
     if (!user) {
@@ -61,9 +63,12 @@ export const getCartController = async (req, res) => {
 
 export const postCartController = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
     const userId = getUserIdFromToken(token);
     const { productId, quantity } = req.body;
+    console.log(productId);
+    console.log(quantity);
     const user = await userService.findById(userId);
     if (!user) {
       req.logger.error(
@@ -119,7 +124,8 @@ export const postCartController = async (req, res) => {
 
 export const putCartController = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
     const userId = getUserIdFromToken(token);
     const { product, quantity } = req.body;
     const user = await userService.findById(userId);
@@ -171,7 +177,8 @@ export const putCartController = async (req, res) => {
 
 export const deleteCartController = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
     const userId = getUserIdFromToken(token);
     const user = await userService.findById(userId);
     if (!user) {
@@ -211,7 +218,8 @@ export const deleteCartController = async (req, res) => {
 
 export const finalizePurchase = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
     const userId = getUserIdFromToken(token);
 
     const user = await userService.findById(userId);
@@ -339,5 +347,48 @@ export const finalizePurchase = async (req, res) => {
       error
     );
     return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+export const deleteProdFromCart = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
+    const userId = getUserIdFromToken(token);
+
+    // Encuentra el usuario a partir del ID del token
+    const user = await userService.findById(userId);
+
+    if (!user) {
+      req.logger.error(
+        `[${new Date().toLocaleString()}] [DELETE] ${
+          req.originalUrl
+        } - El usuario no existe`
+      );
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    // Obtiene el carrito del usuario
+    const cartId = user.cart;
+
+    const cart = await cartService.findById(cartId);
+
+    if (!cart) {
+      return res.status(404).json({ message: "El carrito no fue encontrado." });
+    }
+
+    // Elimina el producto del carrito utilizando el servicio de carrito
+    await cartService.deleteProductFromCart(cartId, id);
+
+    // Responde con un mensaje de éxito
+    res
+      .status(200)
+      .json({ message: "Producto eliminado del carrito exitosamente." });
+  } catch (error) {
+    console.error("Error al eliminar producto del carrito:", error);
+    res.status(500).json({
+      message: "Error interno del servidor al eliminar producto del carrito.",
+    });
   }
 };

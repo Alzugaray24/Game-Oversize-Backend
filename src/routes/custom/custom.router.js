@@ -2,6 +2,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { PRIVATE_KEY } from "../../dirname.js";
 import errorHandler from "../../services/middlewares/errorHandler.js";
+import { getTokenFromCookie } from "../../dirname.js";
 
 export default class CustomRouter {
   constructor() {
@@ -56,7 +57,7 @@ export default class CustomRouter {
     try {
       if (policies[0] === "PUBLIC") return next();
 
-      const token = req.cookies.token;
+      const token = req.headers.cookie;
 
       if (!token) {
         req.logger.info(
@@ -67,14 +68,16 @@ export default class CustomRouter {
         throw new Error("Usuario no autenticado o token inexistente");
       }
 
-      jwt.verify(token, PRIVATE_KEY, (error, credential) => {
+      const tokenValue = getTokenFromCookie(token);
+
+      jwt.verify(tokenValue, PRIVATE_KEY, (error, credential) => {
         if (error) {
           req.logger.info(
             `[${new Date().toLocaleString()}] [handlePolicies] ${
               req.originalUrl
             } El usuario no tiene privilegios, revisa tus roles!`
           );
-          throw new Error("Token invalido, no tiene autorizacion");
+          throw new Error("Token inválido, no tiene autorización");
         }
 
         const user = credential.user;

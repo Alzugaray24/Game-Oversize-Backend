@@ -5,6 +5,7 @@ import UsersDTO from "../services/dto/users.dto.js";
 import { cartService } from "../services/service.js";
 import moment from "moment";
 import { sendDeleteAccountEmail } from "../dirname.js";
+import { getTokenFromCookie, getUserIdFromToken } from "../dirname.js";
 
 export const getAllUsersController = async (req, res) => {
   try {
@@ -50,9 +51,7 @@ export const registerUserController = async (req, res) => {
           req.originalUrl
         } - Todos los campos son obligatorios.`
       );
-      return res
-        .status(400)
-        .json({ error: "Todos los campos son obligatorios." });
+      throw new Error("Todos los campos son obligatorios.");
     }
 
     const existingUser = await userService.findByEmail(email);
@@ -62,9 +61,7 @@ export const registerUserController = async (req, res) => {
           req.originalUrl
         } - El correo electrónico ya está en uso.`
       );
-      return res
-        .status(400)
-        .json({ error: "El correo electrónico ya está en uso." });
+      throw new Error("El correo electrónico ya está en uso.");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,9 +71,7 @@ export const registerUserController = async (req, res) => {
           req.originalUrl
         } - Formato de correo electrónico inválido.`
       );
-      return res
-        .status(400)
-        .json({ error: "Formato de correo electrónico inválido." });
+      throw new Error("Formato de correo electrónico inválido.");
     }
 
     if (isNaN(age) || age < 1 || age > 150) {
@@ -85,9 +80,7 @@ export const registerUserController = async (req, res) => {
           req.originalUrl
         } - La edad debe ser un número válido.`
       );
-      return res
-        .status(400)
-        .json({ error: "La edad debe ser un número válido." });
+      throw new Error("La edad debe ser un número válido.");
     }
 
     const hashedPassword = createHash(password);
@@ -122,9 +115,9 @@ export const registerUserController = async (req, res) => {
       `[${new Date().toLocaleString()}] [POST] ${
         req.originalUrl
       } - Error al registrar al usuario:`,
-      error
+      error.message
     );
-    return res.status(500).json({ error: "Error interno del servidor." });
+    return res.status(500).json({ error: "Error interno en el servidor" });
   }
 };
 
@@ -188,27 +181,25 @@ export const loginController = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
+      const errorMessage = "Se requieren correo electrónico y contraseña.";
       req.logger.error(
         `[${new Date().toLocaleString()}] [POST] ${
           req.originalUrl
-        } - Todos los campos deben ser obligatorios`
+        } - ${errorMessage}`
       );
-      return res
-        .status(400)
-        .json({ error: "Se requieren correo electrónico y contraseña." });
+      throw new Error(errorMessage);
     }
 
     const user = await userService.loginUser(email, password);
 
     if (user === null || !isValidPassword(user, password)) {
+      const errorMessage = "Correo electrónico o contraseña incorrectos.";
       req.logger.error(
         `[${new Date().toLocaleString()}] [DELETE] ${
           req.originalUrl
-        } Correo electrónico o contraseña incorrectos.`
+        } ${errorMessage}`
       );
-      return res
-        .status(401)
-        .json({ error: "Correo electrónico o contraseña incorrectos." });
+      throw new Error(errorMessage);
     }
 
     user.lastLogin = new Date();
@@ -229,23 +220,25 @@ export const loginController = async (req, res) => {
       `[${new Date().toLocaleString()}] [POST] ${
         req.originalUrl
       } - Error al iniciar sesión:`,
-      error
+      error.message
     );
-    return res.status(500).json({ error: "Error interno del servidor." });
+    return res.status(400).json({ error: error.message }); // Devuelve el mensaje de error específico
   }
 };
 
 export const logoutController = async (req, res) => {
   try {
-    res.clearCookie("jwtCookieToken");
+    // Eliminar la cookie que contiene el token
+    res.clearCookie("token");
+
     req.logger.info(
       `[${new Date().toLocaleString()}] [POST] ${
         req.originalUrl
-      } - Sesión cerrada con éxito`
+      } - Sesion cerrada con exito`
     );
-    return res.json({
-      status: "Sesión cerrada con éxito",
-    });
+
+    // Enviar una respuesta al cliente
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     req.logger.error(
       `[${new Date().toLocaleString()}] [POST] ${
@@ -259,23 +252,27 @@ export const logoutController = async (req, res) => {
 
 export const profileController = async (req, res) => {
   try {
-    req.logger.info(
-      `[${new Date().toLocaleString()}] [GET] ${
-        req.originalUrl
-      } - Obteniendo perfil del usuario`
-    );
-    const user = new UsersDTO(req.user);
-    req.logger.info(
-      `[${new Date().toLocaleString()}] [GET] ${
-        req.originalUrl
-      } - Perfil del usuario:`,
-      user
-    );
-
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
+    const userId = getUserIdFromToken(token);
+    const user = await userService.findById(userId);
     if (!user) {
-      return res.status(401).json({ error: "Usuario no autenticado" });
+      const error = new Error("Usuario no encontrado.");
+      error.status = 404;
+      req.logger.error(
+        `[${new Date().toLocaleString()}] [GET] ${
+          req.originalUrl
+        } - Usuario no encontrado al obtener el carrito.`
+      );
+      throw error;
     }
-    return res.json({ user });
+
+    const usuario = UsersDTO.infoUser(user);
+
+    res.status(200).send({
+      msg: "Perfil obtenido con exito",
+      usuario,
+    });
   } catch (error) {
     req.logger.error(
       `[${new Date().toLocaleString()}] [GET] ${

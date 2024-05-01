@@ -98,4 +98,30 @@ export default class CartServiceMongo {
       throw error;
     }
   };
+
+  deleteProductFromCart = async (cartId, productId) => {
+    try {
+      // Convierte el cartId a una cadena de texto
+      const strCartId = cartId[0].toString();
+
+      // Busca el carrito por su ID
+      const cart = await cartModel.findById(strCartId);
+
+      if (!cart) {
+        throw new Error("Carrito no encontrado");
+      }
+
+      // Filtra los productos del carrito y elimina el producto con el ID proporcionado
+      cart.products = cart.products.filter(
+        (item) => item._id.toString() !== productId
+      );
+
+      // Actualiza el carrito en la base de datos con los productos actualizados
+      const updatedCart = await this.update(strCartId, cart);
+
+      return updatedCart;
+    } catch (error) {
+      throw error;
+    }
+  };
 }

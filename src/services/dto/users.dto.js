@@ -9,13 +9,14 @@ export default class UsersDTO {
     this.role = user.role;
   }
 
-  static infoUser(users) {
-    return users.map((user) => ({
-      id: user._id,
+  static infoUser(user) {
+    return {
+      fullName: `${user.first_name} ${user.last_name}`,
       firstName: user.first_name,
       lastName: user.last_name,
+      age: user.age,
       email: user.email,
       role: user.role,
-    }));
+    };
   }
 }

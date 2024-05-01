@@ -96,6 +96,22 @@ export function calculateTotalAmount(products) {
   return totalAmount;
 }
 
+export const getTokenFromCookie = (cookieString) => {
+  if (!cookieString) {
+    return null;
+  }
+
+  const tokenCookie = cookieString
+    .split(";")
+    .find((cookie) => cookie.trim().startsWith("token="));
+
+  if (!tokenCookie) {
+    return null;
+  }
+
+  return tokenCookie.split("=")[1];
+};
+
 export const sendDeleteAccountEmail = async (email) => {
   try {
     const transporter = nodemailer.createTransport({
