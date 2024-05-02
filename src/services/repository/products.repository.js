@@ -2,9 +2,24 @@ export default class ProductRepository {
   constructor(dao) {
     this.dao = dao;
   }
-  getAll = () => {
-    return this.dao.getAll();
+
+  // ACA
+  getAllProductsSortedByTitleAscending = () => {
+    return this.dao.getAllProductsSortedByTitleAscending();
   };
+
+  getAllProductsSortedByPriceDescending = (options) => {
+    return this.dao.getAllProductsSortedByPriceDescending(options);
+  };
+
+  getAllProductsSortedByTitleDescending = (options) => {
+    return this.dao.getAllProductsSortedByTitleDescending(options);
+  };
+
+  getAllProductsSortedByPriceAscending = (options) => {
+    return this.dao.getAllProductsSortedByPriceAscending(options);
+  };
+
   save = (product) => {
     return this.dao.save(product);
   };

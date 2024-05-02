@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { Schema, mongoose } from "mongoose";
 
 const userSchema = new mongoose.Schema({
   first_name: String,
@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
     },
   ],
   lastLogin: { type: Date, default: Date.now },
+  favProds: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 });
 
 const userModel = mongoose.model("User", userSchema);

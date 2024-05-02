@@ -11,6 +11,7 @@ export default class UsersDTO {
 
   static infoUser(user) {
     return {
+      id: user.id,
       fullName: `${user.first_name} ${user.last_name}`,
       firstName: user.first_name,
       lastName: user.last_name,

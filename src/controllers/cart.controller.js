@@ -80,7 +80,7 @@ export const postCartController = async (req, res) => {
     }
     let cartId;
     if (user.cart.length === 0) {
-      cartId = mongoose.Types.ObjectId();
+      cartId = new mongoose.Types.ObjectId();
       user.cart.push(cartId);
     } else {
       cartId = user.cart[0];

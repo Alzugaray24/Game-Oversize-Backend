@@ -10,6 +10,7 @@ export default class ProductDTO {
     this.thumbnail = product.thumbnail;
     this.code = product.code;
     this.stock = product.stock;
+    this.category = product.category;
   }
 
   static async validateForCreate(product) {

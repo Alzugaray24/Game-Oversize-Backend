@@ -4,14 +4,54 @@ import mongoose from "mongoose";
 export default class ProductServiceMongo {
   constructor() {}
 
-  getAll = async (options) => {
+  getAllProductsSortedByTitleAscending = async (options) => {
     try {
       const {
         limit = 10,
         page = 1,
         category,
         availability,
-        sort,
+        query,
+      } = options || {};
+
+      const filter = {};
+      if (category) {
+        filter.category = category;
+      }
+      if (availability !== undefined) {
+        filter.availability = availability;
+      }
+      if (query) {
+        filter.title = { $regex: query, $options: "i" };
+      }
+
+      const sortOption = { title: -1 }; // Ordena por título de forma ascendente por defecto
+
+      const result = await productModel
+        .find(filter)
+        .sort(sortOption)
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .lean();
+
+      const totalItems = await productModel.countDocuments(filter);
+
+      return {
+        items: result,
+        totalItems,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getAllProductsSortedByPriceDescending = async (options) => {
+    try {
+      const {
+        limit = 10,
+        page = 1,
+        category,
+        availability,
         query,
       } = options || {};
 
@@ -28,7 +68,87 @@ export default class ProductServiceMongo {
 
       const result = await productModel
         .find(filter)
-        .sort({ price: sort === "asc" ? 1 : -1 })
+        .sort({ price: -1 })
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .lean();
+
+      const totalItems = await productModel.countDocuments(filter);
+
+      return {
+        items: result,
+        totalItems,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getAllProductsSortedByTitleDescending = async (options) => {
+    try {
+      const {
+        limit = 10,
+        page = 1,
+        category,
+        availability,
+        query,
+      } = options || {};
+
+      const filter = {};
+      if (category) {
+        filter.category = category;
+      }
+      if (availability !== undefined) {
+        filter.availability = availability;
+      }
+      if (query) {
+        filter.title = { $regex: query, $options: "i" };
+      }
+
+      const sortOption = { title: 1 }; // Ordena por título de forma ascendente (de la A a la Z)
+
+      const result = await productModel
+        .find(filter)
+        .sort(sortOption)
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .lean();
+
+      const totalItems = await productModel.countDocuments(filter);
+
+      return {
+        items: result,
+        totalItems,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getAllProductsSortedByPriceAscending = async (options) => {
+    try {
+      const {
+        limit = 10,
+        page = 1,
+        category,
+        availability,
+        query,
+      } = options || {};
+
+      const filter = {};
+      if (category) {
+        filter.category = category;
+      }
+      if (availability !== undefined) {
+        filter.availability = availability;
+      }
+      if (query) {
+        filter.title = { $regex: query, $options: "i" };
+      }
+
+      const result = await productModel
+        .find(filter)
+        .sort({ price: 1 }) // Ordena por precio de forma ascendente
         .limit(limit)
         .skip((page - 1) * limit)
         .lean();

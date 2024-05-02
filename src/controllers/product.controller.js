@@ -2,8 +2,9 @@ import { cartService, productService } from "../services/service.js";
 import ProductDTO from "../services/dto/product.dto.js";
 import { userService } from "../services/service.js";
 import { sendDeletedProdEmail } from "../dirname.js";
+import { getTokenFromCookie, getUserIdFromToken } from "../dirname.js";
 
-export const getProductController = async (req, res) => {
+export const getProductsByTitleDescendingController = async (req, res) => {
   try {
     const validationErrors = ProductDTO.validateForRead();
 
@@ -16,7 +17,8 @@ export const getProductController = async (req, res) => {
       return res.status(400).json({ errors: validationErrors });
     }
 
-    const products = await productService.getAll();
+    const products =
+      await productService.getAllProductsSortedByTitleDescending();
     req.logger.info(
       `[${new Date().toLocaleString()}] [GET] ${
         req.originalUrl
@@ -39,10 +41,216 @@ export const getProductController = async (req, res) => {
   }
 };
 
+export const getProductsByTitleAscendingController = async (req, res) => {
+  try {
+    const { limit, page, category, availability, query } = req.query;
+
+    const options = {
+      limit: parseInt(limit, 10) || 10,
+      page: parseInt(page, 10) || 1,
+      category,
+      availability:
+        availability !== undefined ? Boolean(availability) : undefined,
+      query,
+    };
+
+    const products = await productService.getAllProductsSortedByTitleAscending(
+      options
+    );
+
+    res.status(200).send({
+      msg: "Productos encontrados con exito",
+      productos: products,
+    });
+  } catch (error) {
+    req.logger.error(
+      `[${new Date().toLocaleString()}] [GET] ${
+        req.originalUrl
+      } error al obtener los productos de menor a mayor por título`
+    );
+    res.status(500).json({ error: "Error al obtener productos" });
+  }
+};
+
+export const getProductsByPriceDescendingController = async (req, res) => {
+  try {
+    const { limit, page, category, availability, query } = req.query;
+
+    const options = {
+      limit: parseInt(limit, 10) || 10,
+      page: parseInt(page, 10) || 1,
+      category,
+      availability:
+        availability !== undefined ? Boolean(availability) : undefined,
+      query,
+    };
+
+    const products = await productService.getAllProductsSortedByPriceDescending(
+      options
+    );
+
+    res.status(200).send({
+      msg: "Productos de precio mayor a menor encontrados con exito",
+      productos: products,
+    });
+  } catch (error) {
+    req.logger.error(
+      `[${new Date().toLocaleString()}] [GET] ${
+        req.originalUrl
+      } error al obtener los productos de mayor a menor por precio`
+    );
+    res.status(500).json({ error: "Error al obtener productos" });
+  }
+};
+
+export const getProductsByPriceAscendingController = async (req, res) => {
+  try {
+    const { limit, page, category, availability, query } = req.query;
+
+    const options = {
+      limit: parseInt(limit, 10) || 10,
+      page: parseInt(page, 10) || 1,
+      category,
+      availability:
+        availability !== undefined ? Boolean(availability) : undefined,
+      query,
+    };
+
+    const products = await productService.getAllProductsSortedByPriceAscending(
+      options
+    );
+
+    res.status(200).send({
+      msg: "Productos de precio menor a mayor encontrados con exito",
+      productos: products,
+    });
+  } catch (error) {
+    req.logger.error(
+      `[${new Date().toLocaleString()}] [GET] ${
+        req.originalUrl
+      } error al obtener los productos de menor a mayor por precio`
+    );
+    res.status(500).json({ error: "Error al obtener productos" });
+  }
+};
+
+export const getFavoriteProducts = async (req, res) => {
+  const tokenz = req.headers.cookie;
+  const token = getTokenFromCookie(tokenz);
+  const userId = getUserIdFromToken(token);
+
+  const user = await userService.findById(userId);
+  if (!user) {
+    return res.status(404).json({ error: "Usuario no encontrado." });
+  }
+
+  console.log(user);
+
+  console.log(user.favProds.length);
+
+  const favProds = user.favProds;
+
+  if (favProds.length === 0) {
+    throw new Error("No se encontraron productos favoritos");
+  }
+
+  res.status(200).send({
+    status: "success",
+    favProds,
+  });
+};
+
+export const addOrRemoveProductToFavorite = async (req, res) => {
+  try {
+    const tokenz = req.headers.cookie;
+    const token = getTokenFromCookie(tokenz);
+    const userId = getUserIdFromToken(token);
+    const { productId } = req.params;
+
+    const user = await userService.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    const product = await productService.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: "Producto no encontrado." });
+    }
+
+    product.favorite = !product.favorite;
+
+    const booleano = product.favorite;
+
+    await product.save();
+
+    const index = user.favProds.findIndex((prod) =>
+      prod._id.equals(product._id)
+    );
+    if (product.favorite && index === -1) {
+      user.favProds.push(product);
+    } else if (!product.favorite && index !== -1) {
+      user.favProds.splice(index, 1);
+    }
+
+    await user.save();
+
+    return res.status(200).json({ message: "actualizado", booleano });
+  } catch (error) {
+    console.error("Error al cambiar producto a favorito:", error);
+    return res
+      .status(500)
+      .json({ error: "Ocurrió un error al procesar la solicitud." });
+  }
+};
+
+// export const changeProdToOutstanding = async (req, res) => {
+//   try {
+//     const tokenz = req.headers.cookie;
+//     const token = getTokenFromCookie(tokenz);
+//     const userId = getUserIdFromToken(token);
+//     const { productId } = req.params;
+
+//     const user = await userService.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ error: "Usuario no encontrado." });
+//     }
+
+//     const product = await productService.findById(productId);
+//     if (!product) {
+//       return res.status(404).json({ error: "Producto no encontrado." });
+//     }
+
+//     product.outstanding = !product.outstanding;
+//     await product.save();
+
+//     if (product.outstanding) {
+
+//     } else {
+
+//     }
+
+//     return res.status(200).json({ message: "Destacado actualizado con exito" });
+//   } catch (error) {
+//     console.error("Error al cambiar producto a favorito:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "Ocurrió un error al procesar la solicitud." });
+//   }
+// };
+
 export const postProductController = async (req, res) => {
   try {
-    const { title, description, price, thumbnail, code, stock } = req.body;
-    const productData = { title, description, price, thumbnail, code, stock };
+    const { title, description, price, thumbnail, code, stock, category } =
+      req.body;
+    const productData = {
+      title,
+      description,
+      price,
+      thumbnail,
+      code,
+      stock,
+      category,
+    };
     const validationErrors = await ProductDTO.validateForCreate(productData);
 
     if (validationErrors.length > 0) {

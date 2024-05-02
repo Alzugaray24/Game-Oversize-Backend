@@ -45,6 +45,7 @@ export const registerUserController = async (req, res) => {
   try {
     const { first_name, last_name, email, age, password } = req.body;
 
+    // Validar los campos requeridos
     if (!first_name || !last_name || !email || !age || !password) {
       req.logger.error(
         `[${new Date().toLocaleString()}] [POST] ${
@@ -54,6 +55,7 @@ export const registerUserController = async (req, res) => {
       throw new Error("Todos los campos son obligatorios.");
     }
 
+    // Verificar si el correo electrónico ya está en uso
     const existingUser = await userService.findByEmail(email);
     if (existingUser) {
       req.logger.error(
@@ -64,6 +66,7 @@ export const registerUserController = async (req, res) => {
       throw new Error("El correo electrónico ya está en uso.");
     }
 
+    // Validar el formato del correo electrónico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       req.logger.error(
@@ -74,6 +77,7 @@ export const registerUserController = async (req, res) => {
       throw new Error("Formato de correo electrónico inválido.");
     }
 
+    // Validar la edad
     if (isNaN(age) || age < 1 || age > 150) {
       req.logger.error(
         `[${new Date().toLocaleString()}] [POST] ${
@@ -83,21 +87,18 @@ export const registerUserController = async (req, res) => {
       throw new Error("La edad debe ser un número válido.");
     }
 
+    // Crear un hash para la contraseña del usuario
     const hashedPassword = createHash(password);
 
+    // Crear el nuevo usuario con la lista de productos favoritos vacía
     const newUser = await userService.save({
       first_name,
       last_name,
       email,
       age,
       password: hashedPassword,
+      favProds: [], // Lista de productos favoritos vacía
     });
-
-    const newCart = await cartService.createEmptyCart(newUser._id);
-
-    newUser.cart.push(newCart._id);
-
-    await newUser.save();
 
     req.logger.info(
       `[${new Date().toLocaleString()}] [POST] ${
